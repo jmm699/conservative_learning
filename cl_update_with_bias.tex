@@ -1,0 +1,84 @@
+\documentclass[12pt]{article}
+ 
+\usepackage[margin=1in]{geometry} 
+\usepackage{amsmath,amsthm,amssymb,graphicx,gensymb,cite,multicol,mathtools}
+\usepackage[english]{babel}
+\usepackage[autostyle, english = american]{csquotes}
+\MakeOuterQuote{"}
+\graphicspath{}
+\allowdisplaybreaks
+
+
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\nn}{\mathbf{\hat{n}}}
+\newcommand{\pp}{\mathbf{p}}
+\newcommand{\uu}{\mathbf{u}}
+\newcommand{\vv}{\mathbf{v}}
+\newcommand{\ww}{\mathbf{w}}
+\newcommand{\xx}{\mathbf{\hat{x}}}
+\newcommand{\yy}{\mathbf{\hat{y}}}
+\newcommand{\zz}{\mathbf{\hat{z}}}
+\newcommand{\rr}{\mathbf{\hat{r}}}
+\newcommand{\ee}{\mathbf{\hat{e}}}
+\newcommand{\rrr}{\mathbf{r}}
+\newcommand{\ppp}{\mathbf{p}}
+\newcommand{\xxx}{\mathbf{x}}
+\newcommand{\limn}{\lim_{n \rightarrow \infty}}
+\newcommand{\limk}{\lim_{k \rightarrow \infty}}
+\newcommand{\nnot}{\sim \!}
+\let\oldemptyset\emptyset
+\let\emptyset\varnothing
+\renewcommand{\Re}{\mathrm{Re}}
+\renewcommand{\Im}{\mathrm{Im}}
+
+%for EM:
+\newcommand{\EE}{\mathbf{E}}
+\newcommand{\DD}{\mathbf{D}}
+\newcommand{\BB}{\mathbf{B}}
+\newcommand{\VA}{\mathbf{A}}
+
+%for QM:
+\newcommand{\ev[1]}{\left\langle #1 \right\rangle}
+\newcommand{\intii}{\int_{-\infty}^\infty}
+\newcommand{\intoi}{\int_0^\infty}
+\newcommand{\HH}{\mathbb{H}}
+\newcommand{\ang}[3]{\,^{#1} {#2}_{#3}}
+%\newcommand{\bra[1]}{\left\langle #1 \right\right|}
+%\newcommand{\ket[1]}{\left\left| #1 \right\rangle}
+%\newcommand{\braket}[2]{\left\langle #1  #2 \right\rangle}
+\usepackage{braket}
+\newcommand{\tr}{\mathrm{Tr}}
+\newcommand{\Sp}{\mathbf{S}}
+\newcommand{\J}{\mathbf{J}}
+
+ 
+
+\begin{document}
+
+\title{Using Node Biases with Conservative Learning}
+\author{John Mastroberti}
+ 
+\maketitle
+
+As a modification to the conservative learning algorithm outlined here (ref), we want to add a bias term to the nodes:
+\begin{align}
+y_j^k & = \sum_{i \rightarrow j} x_i^k w_{i \rightarrow j} - b_j
+\end{align}
+We can accomplish this by introducing a special input node which is always set to 1.
+This node is then connected to all of the hidden and output nodes, 
+and if we give this special node the index $s$, we can define
+\begin{align*}
+w_{s \rightarrow j} & = -b_j
+\end{align*}
+so that we can retain the formula 
+\begin{align*}
+y_j^k & = \sum_{i \rightarrow j} x_i^k w_{i \rightarrow j}
+\end{align*}
+
+
+
+\end{document}
