@@ -55,7 +55,7 @@
 \newcommand{\Sp}{\mathbf{S}}
 \newcommand{\J}{\mathbf{J}}
 
- 
+\renewcommand{\ij}{i \rightarrow j} 
 
 \begin{document}
 
@@ -64,21 +64,53 @@
  
 \maketitle
 
-As a modification to the conservative learning algorithm outlined here (ref), we want to add a bias term to the nodes:
+As a modification to the conservative learning algorithm outlined here\cite{cl_update}, we want to add a bias term to the nodes:
 \begin{align}
 y_j^k & = \sum_{i \rightarrow j} x_i^k w_{i \rightarrow j} - b_j
 \end{align}
 We can accomplish this by introducing a special input node which is always set to 1.
 This node is then connected to all of the hidden and output nodes, 
 and if we give this special node the index $s$, we can define
-\begin{align*}
+\begin{align}
 w_{s \rightarrow j} & = -b_j
-\end{align*}
+\end{align}
 so that we can retain the formula 
-\begin{align*}
+\begin{align}
 y_j^k & = \sum_{i \rightarrow j} x_i^k w_{i \rightarrow j}
-\end{align*}
+\end{align}
+Using this formalism leaves the update algorithm largely unchanged.
+The important differences are as follows.
+
+While equation (1.15),
+\begin{align}
+\forall (i \in H, k \in K): & \,\,\, \gamma_i^k = df_i^k \sum_{i \rightarrow j} w_{i \rightarrow j} \gamma_j^k
+\end{align}
+remains unchanged, since $s \not\in H$, equation (1.16),
+\begin{align}
+\forall (\ij \in E): \,\,\, \Delta w_{\ij} + \delta w_{\ij}
+& = \sum_{k \in K} \tilde{x}_i^k \gamma_{j}^k \\
+& = \tilde{x}_i \cdot \gamma_j
+\end{align}
+now encompasses the special case
+\begin{align}
+\forall (j \in H \cup O): \,\,\, \Delta b_j + \delta b_j 
+& = \tilde{x}_i \cdot \gamma_j
+\end{align}
+which means that equation (1.18) now reads
+\begin{align}
+\forall (j \in H_-, k \in K): \,\,\, \delta y_j^k
+& = \sum_{\ij} \tilde{x}_i^k (\tilde{x}_i \cdot \gamma_j - \Delta w_{\ij})
++ \tilde{x}_s^k (\tilde{x}_s \cdot \gamma_j - \Delta b_j) \\
+& = \sum_{\ij} \tilde{x}_i^k (\tilde{x}_i \cdot \gamma_j - \Delta w_{\ij})
++ \sum_{\kappa \in K} \gamma_j^\kappa - \Delta b_j
+\end{align}
+since $\tilde{x}_s^k = 1$.
 
 
+
+
+
+\bibliography{refs}{}
+\bibliographystyle{plain}
 
 \end{document}
