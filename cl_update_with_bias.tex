@@ -93,19 +93,27 @@ remains unchanged, since $s \not\in H$, equation (1.16),
 \end{align}
 now encompasses the special case
 \begin{align}
-\forall (j \in H \cup O): \,\,\, \Delta b_j + \delta b_j 
-& = \tilde{x}_i \cdot \gamma_j
+\forall (j \in H \cup O): \,\,\, -\Delta b_j + -\delta b_j 
+& = \tilde{x}_s \cdot \gamma_j
 \end{align}
 which means that equation (1.18) now reads
 \begin{align}
 \forall (j \in H_-, k \in K): \,\,\, \delta y_j^k
 & = \sum_{\ij} \tilde{x}_i^k (\tilde{x}_i \cdot \gamma_j - \Delta w_{\ij})
-+ \tilde{x}_s^k (\tilde{x}_s \cdot \gamma_j - \Delta b_j) \\
++ \tilde{x}_s^k (\tilde{x}_s \cdot \gamma_j + \Delta b_j) \\
 & = \sum_{\ij} \tilde{x}_i^k (\tilde{x}_i \cdot \gamma_j - \Delta w_{\ij})
-+ \sum_{\kappa \in K} \gamma_j^\kappa - \Delta b_j
++ \sum_{\kappa \in K} \gamma_j^\kappa + \Delta b_j
 \end{align}
 since $\tilde{x}_s^k = 1$.
-
+Furthermore, the forward propagation equation (1.19) gets the slight modification
+\begin{align}
+\forall (j \not\in H_-, k \in K): \,\,\, \delta y_j^k & = 
+\sum_{\ij} (df_i^k \delta y_i^k w_{\ij} + \tilde{x}_i^k (\tilde{x}_i \cdot \gamma_j - \Delta w_{\ij}) ) 
++ \tilde{x}_s^k (\tilde{x}_s \cdot \gamma_j + \Delta b_j) \\
+& = \sum_{\ij} (df_i^k \delta y_i^k w_{\ij} + \tilde{x}_i^k (\tilde{x}_i \cdot \gamma_j - \Delta w_{\ij}) ) 
++ \sum_{\kappa \in K} \gamma_j^\kappa + \Delta b_j
+\end{align}
+since there are no $\delta y_j^k$'s or $df_i^k$'s for $i \in I$, including our special input node $s$.
 
 
 
