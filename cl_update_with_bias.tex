@@ -120,9 +120,77 @@ most notably, an extra row is added to $\tilde{X}$ for our special node $s$,
 and $\delta W$ and $\Delta W$ get an extra row for the biases:
 \begin{align}
 \forall (j \in O, k \in K): \,\,\, \epsilon_j^k & = 
-\sum_{\ij} (df_i^k \delta y_i^k w_{\ij} + \tilde{x}_i^k \delta w_{\ij}) \\
-- \delta b_j
+\sum_{\ij} (df_i^k \delta y_i^k w_{\ij} + \tilde{x}_i^k \delta w_{\ij}) 
+- \delta b_j \\
+\mathcal{E}(n)_{kj} & = \epsilon_j^k - \sum_{\ij} df_i^k w_{\ij} \delta y(n)_i^k \\
+\tilde{X} & = \left( \begin{array}{ccccc}
+        \tilde{x}_1^1 & \tilde{x}_1^2 & \cdots & \tilde{x}_1^k & \cdots \\
+        \tilde{x}_2^1 & \tilde{x}_2^2 & \cdots & \tilde{x}_2^k & \cdots \\
+        \vdots & \vdots & \ddots & \vdots & \ddots \\
+        1 & 1 & \cdots & 1 & \cdots \\
+        \end{array}
+        \right) \\
+\delta W(n) & = \left( \begin{array}{ccccc}
+        \delta w_{1 \rightarrow 1} & \delta w_{1 \rightarrow 2} & \cdots & \delta w_{1 \rightarrow j} & \cdots \\
+        \delta w_{2 \rightarrow 1} & \delta w_{2 \rightarrow 2} & \cdots & \delta w_{2 \rightarrow j} & \cdots \\
+        \vdots & \vdots & \ddots & \vdots & \ddots \\
+        -\delta b_1 & -\delta b_2 & \cdots & -\delta b_j & \cdots \\
+        \end{array}
+        \right) \\
+\Delta W(n) & = \left( \begin{array}{ccccc}
+        \Delta w_{1 \rightarrow 1} & \Delta w_{1 \rightarrow 2} & \cdots & \Delta w_{1 \rightarrow j} & \cdots \\
+        \Delta w_{2 \rightarrow 1} & \Delta w_{2 \rightarrow 2} & \cdots & \Delta w_{2 \rightarrow j} & \cdots \\
+        \vdots & \vdots & \ddots & \vdots & \ddots \\
+        -\Delta b_1 & -\Delta b_2 & \cdots & -\Delta b_j & \cdots \\
+        \end{array}
+        \right)
 \end{align}
+With these slight modifications, and maintaining $\Gamma(n)_{kj} = \gamma(n)_j^k$ from equation (1.29),
+the form of equation (1.30) remains unchanged:
+\begin{align}
+\Gamma(n) & = (\tilde{X}^\top \tilde{X})^{-1} (\tilde{X}^\top \Delta W + \mathcal{E}(n))
+\end{align}
+
+Thus, the steps for an inner loop now read
+\begin{enumerate}
+\item
+Initialize $\gamma$'s at the output nodes:
+\begin{align}
+\Gamma(n) & = (\tilde{X}^\top \tilde{X})^{-1} (\tilde{X}^\top \Delta W + \mathcal{E}(n)) \tag{17}
+\end{align}
+
+\item
+Back-propagate $\gamma$'s down to all the hidden nodes:
+\begin{align}
+\forall (i \in H, k \in K): & \,\,\, \gamma_i^k = df_i^k \sum_{i \rightarrow j} w_{i \rightarrow j} \gamma_j^k \tag{4}
+\end{align}
+
+\item
+Initialize $\delta y$'s at nodes adjacent to the input nodes:
+\begin{align}
+\forall (j \in H_-, k \in K): \,\,\, \delta y_j^k
+& = \sum_{\ij} \tilde{x}_i^k (\tilde{x}_i \cdot \gamma_j - \Delta w_{\ij})
++ \sum_{\kappa \in K} \gamma_j^\kappa + \Delta b_j \tag{9}
+\end{align}
+
+\item
+Forward propagate $\delta y$'s up to the nodes adjacent to the output nodes:
+\begin{align}
+\forall (j \not\in H_-, k \in K): \,\,\, \delta y_j^k & = 
+\sum_{\ij} (df_i^k \delta y_i^k w_{\ij} + \tilde{x}_i^k (\tilde{x}_i \cdot \gamma_j - \Delta w_{\ij}) ) 
++ \sum_{\kappa \in K} \gamma_j^\kappa + \Delta b_j \tag{11}
+\end{align}
+
+\end{enumerate}
+We still obtain the weight changes from (1.33),
+\begin{align*}
+\forall (\ij \in E): \,\,\, \delta w_{\ij} & = \tilde{x}_i \cdot \gamma_j - \Delta w_{\ij}
+\end{align*}
+and we obtain the bias changes from
+\begin{align*}
+\forall (j \in H \cup O) : \delta b_j & = -\sum_{\kappa \in K} \gamma_j^\kappa + \Delta b_j
+\end{align*}
+
 
 
 
