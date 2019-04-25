@@ -115,6 +115,14 @@ Furthermore, the forward propagation equation (1.19) gets the slight modificatio
 \end{align}
 since there are no $\delta y_j^k$'s or $df_i^k$'s for $i \in I$, including our special input node $s$.
 
+Finally, the initialization formulas need to be modified slightly;
+most notably, an extra row is added to $\tilde{X}$ for our special node $s$,
+and $\delta W$ and $\Delta W$ get an extra row for the biases:
+\begin{align}
+\forall (j \in O, k \in K): \,\,\, \epsilon_j^k & = 
+\sum_{\ij} (df_i^k \delta y_i^k w_{\ij} + \tilde{x}_i^k \delta w_{\ij}) \\
+- \delta b_j
+\end{align}
 
 
 
