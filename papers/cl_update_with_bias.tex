@@ -183,13 +183,13 @@ Forward propagate $\delta y$'s up to the nodes adjacent to the output nodes:
 
 \end{enumerate}
 We still obtain the weight changes from (1.33),
-\begin{align*}
+\begin{align}
 \forall (\ij \in E): \,\,\, \delta w_{\ij} & = \tilde{x}_i \cdot \gamma_j - \Delta w_{\ij}
-\end{align*}
+\end{align}
 and we obtain the bias changes from
-\begin{align*}
-\forall (j \in H \cup O) : \delta b_j & = -\sum_{\kappa \in K} \gamma_j^\kappa + \Delta b_j
-\end{align*}
+\begin{align}
+\forall (j \in H \cup O) : \delta b_j & = -\sum_{\kappa \in K} \gamma_j^\kappa - \Delta b_j
+\end{align}
 
 
 
