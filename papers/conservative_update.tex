@@ -1,0 +1,306 @@
+\documentclass[12pt]{article}
+
+\pagestyle{myheadings}
+\usepackage{times}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{mathtools}
+
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator{\Tr}{Tr}
+
+\textwidth = 6 in
+\textheight = 8 in
+\oddsidemargin = 0.5 in
+\evensidemargin = 0.5 in
+\topmargin = 0.0 in
+\headheight = 0.0 in
+\headsep = 1.0 in
+\parskip = 0.2in
+\parindent = 0.0in
+
+\begin{document}
+
+\today
+
+\subsection*{Conservative updates by backward-forward cycles}
+
+These notes describe an iterative scheme for computing the exact batch-conservative update for standard neural networks with arbitrary activation function $f$. The algorithm is in the spirit of Newton's root finding algorithm, where  solutions are fixed points of the iteration scheme. However, these solutions are exactly conservative only in a local sense. When large parameter changes are required to accommodate a batch of data, the minimizer found by the algorithm may differ from the global minimizer.
+
+The training task is to make the smallest 2-norm changes to the network parameters so that a batch of input data is exactly mapped to given output data. Such regression problems arise, for example, when batch-conservatively training an autoencoder.
+
+For simplicity we consider networks without bias parameters.
+
+\subsubsection*{Notation and overview}
+
+We use indices $i$ and $j$ for nodes and the notation $i\to j$ for an edge between nodes. A layered architecture is not assumed, and in fact the formulas are just as simple (or even simpler) without making reference to layers. However, the update computation does distinguish five kinds of nodes that every feed-forward network has, layered or not. First there are the input nodes $I$ that hold the input data values. When successfully trained, the propagated input data will match  corresponding output data that resides in the output nodes $O$. All nodes not in $I$ or $O$ comprise the hidden nodes $H$. We single out a subset $H_-$ of the hidden nodes by the property that all nodes in this subset get input only from nodes in $I$. Similarly, the subset $H_+$ of hidden nodes sends outputs only to nodes in $O$. We use $E$ for the set of all edges in the network.
+
+Post and pre-activation node values are denoted $x$ and $y$ respectively, and the network weights are $w$. The equations for neuron $j\in H$ is the pair
+\begin{subequations}\label{neuron}
+\begin{align}
+y^k_j&=\sum_{i\to j} x^k_i\, w_{i \to j}\\
+x^k_j&=f(y^k_j),
+\end{align}
+\end{subequations}
+where $k\in K$ is the index for data items in the training batch. There is an activation function only at the hidden nodes, not the output nodes. Thus there are no $x$ variables at the output nodes, just as there are no $y$ variables at the input nodes. When trained, the network maps $x^k_i$, $i\in I$ to $y^k_j$, $j\in O$ for all data $k\in K$.
+
+The initial network weights are denoted $w^0_{i\to j}$. These are updated in an ``outer" optimization loop as
+\begin{equation}
+w^0_{i\to j}\to w^0_{i\to j}+\Delta w_{i\to j}\coloneqq w_{i\to j}.
+\end{equation}
+Conservative learning aims to solve the batch-regression problem while minimizing
+\begin{equation}\label{objective}
+\sum_{i\to j\in E}\|\Delta w_{i\to j}\|^2.
+\end{equation}
+The weight increments $\Delta w$ are updated as
+\begin{equation}\label{outerupdate}
+\Delta w_{i\to j}+\delta w_{i\to j}\to \Delta w'_{i\to j}
+\end{equation}
+upon completion of an ``inner" loop. The inner loop solves a linearized optimization problem wherein $\delta w_{i\to j}$ participates as a variable. Most of the work occurs in this inner loop, and as we will see, involves cycles of backward and forward propagation.
+
+The inner loop is initialized by feeding-forward all items in the training batch $K$ using the current weights $w_{i\to j}$ set by the outer loop. No approximations are made in the initialization. In the inner loop the initialized (feed-forward) node values, denoted $\tilde{x}$ and $\tilde{y}$, are treated as constants and the neuron equations \eqref{neuron} are linearized about these values:
+\begin{subequations}
+\begin{align}
+\delta y^k_j&=\sum_{i\to j} \left(\delta x^k_i\,w_{i\to j}+\tilde{x}^k_i\, \delta w_{i \to j}\right)\label{neuronchange1}\\
+\delta x^k_j&=f'(\tilde{y}^k_j)\delta y^k_j.\label{neuronchange2}
+\end{align}
+\end{subequations}
+The derivatives $f'(\tilde{y}^k_j)\coloneqq df^k_j$ are also treated as constants in the inner loop.
+
+Equation \eqref{neuronchange1} has two cases owing to the fact that $\delta x^k_i=0$ for $i\in I$:
+\begin{subequations}\label{eqn1}
+\begin{align}
+\forall\; (j\in H_-, k\in K):\quad&\delta y^k_j=\sum_{i\to j}\tilde{x}^k_i\, \delta w_{i \to j}\label{eqn1a}\\
+\forall\; (j\notin H_-, k\in K):\quad&\delta y^k_j=\sum_{i\to j} \left(\delta x^k_i\,w_{i\to j}+\tilde{x}^k_i\, \delta w_{i \to j}\right)\label{eqn1b}
+\end{align}
+\end{subequations}
+At nodes $j\in O$ we know what changes $\delta y^k_j$ are required for the network to produce the given output data. Let these changes, determined by feed-forward  of data in the outer optimization loop, be $\epsilon^k_j$. Equation \eqref{neuronchange2} is then replaced by
+\begin{equation}
+\forall\; (j\in O, k\in K):\quad \epsilon^k_j=\delta y^k_j.\label{eqn2b}
+\end{equation}
+
+The linear equations in the inner optimization loop treat the output discrepancies $\epsilon^k_j$ as small. When the discrepancies are indeed small, the variables $\delta x$, $\delta y$ and $\delta w$ will be small as well and the the succession of linearizations performed by the outer loop have a chance of converging. Only in this case do we expect the net update $\Delta w$ to be properly conservative. At the start of training, when the discrepancies often are not small, the updates might be ``neo-conservative", that is, only a local minimum of \eqref{objective}. However, we can hope this will just be transient behavior and after a certain stage of training the discrepancies will always be sufficiently small so the updates $\Delta w$ are conservative in a global sense.
+
+
+\subsubsection*{Lagrangian}
+
+The constrained optimization for the batch-conservative update in the (``inner-loop") linear approximation is compactly defined by the stationary points of the following Lagrangian:
+\begin{subequations}\label{lagrangian}
+\begin{align}
+\mathcal{L}&=\frac{1}{2}\sum_{i\to j\in E}\left(\Delta w_{i\to j}+\delta w_{i\to j}\right)^2\\
+&+\sum_{{k\in K}\atop{i\in H}}\beta^k_i\left(\delta x^k_i-df^k_i\, \delta y^k_i\right)\\
+&+\sum_{{k\in K}\atop{j\in H_-}}\gamma^k_j\left(\delta y^k_j-\sum_{i\to j}\tilde{x}^k_i\,\delta w_{i\to j}\right)\\
+&+\sum_{{k\in K}\atop{j\notin H_-\cup O}}\gamma^k_j\left(\delta y^k_j-\sum_{i\to j}\left(\delta x^k_i\,w_{i\to j}+\tilde{x}^k_i\,\delta w_{i\to j}\right)\right)\\
+&+\sum_{{k\in K}\atop{j\in O}}\gamma^k_j\left(\epsilon^k_j-\sum_{i\to j}\left(\delta x^k_i\,w_{i\to j}+\tilde{x}^k_i\,\delta w_{i\to j}\right)\right).\label{L5}
+\end{align}
+\end{subequations}
+
+The variables in the unconstrained optimization are $\delta w$, $\delta x$, $\delta y$ and the Lagrange multipliers $\beta$ and $\gamma$. Stationarity with respect to the latter just reproduce equations \eqref{neuronchange2} and \eqref{eqn1}. For $\delta x$ we obtain
+\begin{equation}
+\forall\; (i\in H, k\in K):\quad \beta^k_i=\sum_{i\to j}w_{i\to j}\,\gamma^k_j,
+\end{equation}
+and stationarity with respect to $\delta y$ implies
+\begin{equation}\label{ddeltay}
+\forall\; (i\in H, k\in K):\quad \gamma^k_i=df^k_i\,\beta^k_i.
+\end{equation}
+We can eliminate $\beta$ between the last two equations:
+\begin{equation}\label{backprop}
+\forall\; (i\in H, k\in K):\quad \gamma^k_i=df^k_i\sum_{i\to j} w_{i\to j}\,\gamma^k_j.
+\end{equation}
+
+The final set of equations follow from stationarity with respect to $\delta w$:
+\begin{align}\label{ddeltaw}
+\forall\; (i\to j\in E):\quad \Delta w_{i\to j}+\delta w_{i\to j}&=\sum_{k\in K}\tilde{x}^k_i\gamma^k_j\\
+&\coloneqq \tilde{x}_i\cdot \gamma_j.
+\end{align}
+A special case of this applies to $j\in H_-$. Substituting $\delta w_{i\to j}$ for this case from \eqref{ddeltaw} into \eqref{eqn1a} we obtain
+\begin{equation}\label{deltayinit}
+\forall\; (j\in H_-, k\in K):\quad\delta y^k_j=\sum_{i\to j}\tilde{x}^k_i\, \left(\tilde{x}_i\cdot \gamma_j-\Delta w_{i\to j}\right).
+\end{equation}
+Making the same substitution but now into \eqref{eqn1b} and using \eqref{neuronchange2}, we obtain
+\begin{equation}\label{forwardprop}
+\forall\; (j\notin H_-, k\in K):\quad\delta y^k_j=\sum_{i\to j}\left(df^k_i\delta y^k_i\,w_{i\to j}
++\tilde{x}^k_i (\tilde{x}_i\cdot \gamma_j-\Delta w_{i\to j})\right).
+\end{equation}
+
+
+\subsubsection*{Inner loop initialization}
+
+Each cycle of the linear optimization is initialized at the output layer:
+\begin{equation}\label{init1}
+\forall\; (j\in O, k\in K):\quad\epsilon^k_j=\sum_{i\to j} \left(df^k_i\,\delta y^k_i\,w_{i\to j}+\tilde{x}^k_i\, \delta w_{i \to j}\right).
+\end{equation}
+Introducing an iteration counter $n=0,1,\ldots$ for the inner loop and the matrix notation
+\begin{align}
+\mathcal{E}(n)_{k j}&\coloneqq\epsilon^k_j-\sum_{i\to j}df^k_i\,w_{i\to j}\,{\delta y(n)}^k_i\label{E(n)}\\
+\widetilde{X}_{i k}&\coloneqq\tilde{x}^k_i \\
+\delta W(n)_{i j}&\coloneqq\delta w(n)_{i\to j},
+\end{align}
+we can rewrite \eqref{init1} in matrix form:
+\begin{equation}\label{init2}
+\mathcal{E}(n)=\widetilde{X}^T \delta W(n).
+\end{equation}
+In the first cycle we set $\delta y(0)=0$, in effect ignoring the accumulated effects of changes to the node values when resolving the output discrepancy. Since $\mathcal{E}(0)$ is just the known discrepancy $\epsilon^k_j$ from the feed-forward of data in the outer loop, by inverting \eqref{init2} we can get an initial estimate of the weight changes $\delta W(0)$ on edges to the output nodes.
+
+In the generic case of \eqref{init2} we can only solve for $\delta W(n)$ when the dimensions of the $|H_+|\times |K|$ matrix 
+$\widetilde{X}$ satisfy
+\begin{equation}\label{inequality}
+|K|\le |H_+|.
+\end{equation}
+When the inequality is strict we get a unique solution by imposing, additionally, that $\delta W(n)$ has minimum 2-norm. But that is exactly what we seek in conservative learning. Assuming the batch size and network architecture satisfy \eqref{inequality}, equation \eqref{init2} is inverted by applying the pseudo-inverse:
+\begin{equation}\label{Winit}
+\delta W(n)=\widetilde{X}(\widetilde{X}^T \widetilde{X})^{-1}\mathcal{E}(n).
+\end{equation}
+Computing the inverse of the $|K|\times |K|$ matrix $\widetilde{X}^T \widetilde{X}$ is the only matrix inverse required by the algorithm and it is needed only once per iteration of the outer optimization loop.
+
+Defining two more matrices, for $j\in O$,
+\begin{align}
+\Delta W_{i j}&\coloneqq\Delta w_{i\to j}\\
+\Gamma(n)_{k j}&\coloneqq\gamma(n)^k_j,
+\end{align}
+we can rewrite \eqref{ddeltaw}, for $j\in O$, in matrix form:
+\begin{equation}\label{W+dW}
+\Delta W+\delta W(n)=\widetilde{X}\,\Gamma(n).
+\end{equation}
+Multiplying this by $(\widetilde{X}^T \widetilde{X})^{-1}\widetilde{X}^T$, and using \eqref{Winit}, we obtain a formula for the  $\gamma^k_j$ Lagrange multipliers for $j\in O$:
+\begin{equation}\label{gammainit}
+\Gamma(n)=(\widetilde{X}^T \widetilde{X})^{-1}\left(\widetilde{X}^T \Delta W+\mathcal{E}(n)\right).
+\end{equation}
+
+\subsubsection*{Backward-forward cycle}
+
+One cycle of the inner optimization loop comprises four steps:
+\begin{enumerate}
+\item Initialize $\gamma$'s at the output nodes.
+\item Back-propagate $\gamma$'s down to all the hidden nodes.
+\item Initialize $\delta y$'s at nodes adjacent to the input nodes.
+\item Forward-propagate $\delta y$'s up to the nodes adjacent to the output nodes.
+\end{enumerate}
+
+Step 1 for cycle $n$ is given by equation \eqref{gammainit}. Recall that the data for the first cycle, $\mathcal{E}(0)$, is just the set of discrepancies $\epsilon^k_j$ at the output nodes after the forward pass of the data in the training batch.
+
+Step 2 is the evaluation of \eqref{backprop} by back-propagation. Propagation terminates at nodes $i\in H_-$ that only receive inputs from input nodes.
+
+Step 3 is given by equation \eqref{deltayinit}.
+
+Step 4 is the evaluation of \eqref{forwardprop} by forward-propagation. Note that the $\gamma$'s in this equation were determined in step 2 and propagation extends all the way to $\delta y^k_i$ with $i\in H_+$. This defines $\mathcal{E}(n+1)$ via $\delta y(n+1)^k_i$ in equation \eqref{E(n)} to start the next cycle.
+
+We can use the matrix $\Gamma(n)$ that starts each cycle both as a criterion for terminating iterations and as a means for stabilizing/boosting convergence. For the former we monitor the norm
+\begin{equation}
+\|\Gamma(n+1)-\Gamma(n)\|
+\end{equation}
+and terminate iterations when it falls below some threshold. For the latter we simply make the replacement
+\begin{equation}
+\Gamma(n+1)\leftarrow (1-r)\Gamma(n+1)+r \Gamma(n),
+\end{equation}
+where $r$ is a relaxation parameter and $0<r<1$ enhances stability. If stability is not a concern, one can try to accelerate convergence by over-relaxation, or $r<0$.
+
+By \eqref{ddeltaw}, from the converged $\gamma$'s we obtain the weight changes of the inner (linear optimization) loop by
+\begin{equation}
+\forall\; (i\to j\in E):\quad \delta w_{i\to j}=\tilde{x}_i\cdot\gamma_j -\Delta w_{i\to j}.
+\end{equation}
+
+When the inner loop is exited, the weights are updated by \eqref{outerupdate} and the same training data is fed back through the network to define $\tilde{x}$ and $\tilde{y}$ for the next round of backward-forward cycles. We can use the final $\mathcal{E}$ matrix of the inner loop to decide when to terminate the outer loop. By \eqref{Winit}, when the converged $\|\mathcal{E}\|$ is small, so are the $\delta w$ needed to fix the network outputs on the training batch.
+
+\subsubsection*{Comparison with SGD}
+
+Because the inner optimization begins with backward propagation initialized by output discrepancies, we should not be surprised that limiting the inner loop to a single half-cycle reproduces a version of the stochastic gradient descent (SGD) algorithm. 
+
+Here is a summary of the weight update when we perform just a single outer-loop iteration and a half-cycle in the inner loop. In the first iteration of the outer loop, $\Delta w$ (accumulated weight updates) is zero and \eqref{gammainit} reduces for $n=0$ (first inner-loop iteration) to
+\begin{equation}\label{simple1}
+\forall\; (j\in O, k\in K):\quad \gamma^k_j=\sum_{k'\in K}(\widetilde{X}^T \widetilde{X})^{-1}_{k k'}\;\epsilon^{k'}_j.
+\end{equation}
+We then use the back-propagation equation \eqref{backprop}, again with $\Delta w=0$, to determine the $\gamma$'s on the hidden nodes:
+\begin{equation}\label{simple2}
+\forall\; (i\in H, k\in K):\quad \gamma^k_i=f'(\tilde{y}^k_i)\sum_{i\to j}w^0_{i\to j}\,\gamma^k_j.
+\end{equation}
+Finally, from \eqref{ddeltaw} we get the weight updates:
+\begin{equation}\label{simple3}
+\forall\; (i\to j\in E):\quad \delta w_{i\to j}=\sum_{k\in K}\tilde{x}^k_i\gamma^k_j.
+\end{equation}
+
+Only \eqref{simple2} resembles the back-propagation of SGD, where information at the output nodes is propagated, independently for all items in the ``mini-batch", to all the hidden nodes. However, already in the initialization \eqref{simple1} we see that there is ``mixing" of the mini-batch discrepancies, and the weight updates in \eqref{simple3} are not a simple average but a weighted average of the propagated variables ($\gamma$'s) over the mini-batch. On the other hand, we show next that for mini-batches of size 1, and up to indefiniteness in the step size, the equations above are the same as those in SGD. 
+
+To facilitate the comparison, we derive the SGD update in our notation.
+For the regression problem SGD computes the gradient of the loss
+\begin{equation}
+L=\frac{1}{2}\sum_{i\in O}(y_i-y^*_i)^2,
+\end{equation}
+where the $y^*$ are the given output values and we have simplified the notation for the case of a single training item. As before, $\tilde{x}$ and $\tilde{y}$ are post- and pre-activation node values when the data is fed into the network with the current weights, $w^0$. The output discrepancies therefore satisfy
+\begin{equation}
+\forall\; (i\in O):\quad \tilde{y}_i+\epsilon_i=y^*_i.
+\end{equation}
+
+By repeated application of the chain rule,
+\begin{subequations}
+\begin{align}
+g_{i\to j}&\coloneqq \frac{\partial L}{\partial w_{i\to j}}\\
+&=\frac{\partial L}{\partial  y_j}\,\frac{\partial y_j}{\partial w_{i\to j}}\\
+&=\frac{\partial L}{\partial  y_j}\,\tilde{x}_i\label{chain1}\\
+&=\frac{\partial L}{\partial  x_j}\,\frac{\partial x_j}{\partial y_j}\,\tilde{x}_i\\
+&=\frac{\partial L}{\partial  x_j}\,f'(\tilde{y}_j)\,\tilde{x}_i\label{tbc}.
+\end{align}
+\end{subequations}
+We will see that the quantity
+\begin{equation}\label{gammatilde}
+\widetilde{\gamma}_j\coloneqq-\frac{\partial L}{\partial  y_j}
+\end{equation}
+is analogous to the Lagrange multiplier $\gamma_j$ of the conservative update. 
+For our loss function,
+\begin{equation}
+\forall\; (j\in O):\quad \widetilde{\gamma}_j=\epsilon_j.
+\end{equation}
+This initializes the back-propagation.
+
+Continued application of the chain rule to \eqref{tbc} gives
+\begin{align}
+g_{i\to j}=\frac{\partial L}{\partial  y_j}\,\tilde{x}_i&=f'(\tilde{y}_j)\,\tilde{x}_i\left(\sum_{j\to l}\frac{\partial L}{\partial  y_l}\,\frac{\partial y_l}{\partial  x_j}\right)\\
+&=f'(\tilde{y}_j)\,\tilde{x}_i\,\sum_{j\to l}\frac{\partial L}{\partial  y_l}\,w^0_{j\to l}.
+\end{align}
+Using the definition \eqref{gammatilde}, and assuming $\tilde{x}_i\ne 0$, we arrive at the back-propagation equation for the $\widetilde{\gamma}$'s:
+\begin{equation}
+\widetilde{\gamma}_j=f'(\tilde{y}_j)\sum_{j\to l}w^0_{j\to l}\,\widetilde{\gamma}_l.
+\end{equation}
+This is identical to the $\gamma$-recursion \eqref{simple2} in conservative learning. In SGD, unlike conservative learning, the gradient step size is an empirical parameter $s$, the learning rate:
+\begin{equation}
+\delta w_{i\to j}=-s\, g_{i\to j}=s\, \tilde{x}_i \widetilde{\gamma}_j.
+\end{equation}
+
+\subsubsection*{Soft output constraint}
+
+There are two reasons why one might want to soften the constraint that the network exactly produce the given output data. First, there may be noise in these data vectors and we want to avoid overfitting to this noise. Second, it turns out that softening this constraint  eliminates the limit \eqref{inequality} on the size of the training batch.
+
+In the Lagrangian \eqref{lagrangian} we replace the hard constraints on the outputs by a quadratic cost with stiffness parameter $\kappa$. In the limit $\kappa\to\infty$ we will recover the original update rule, when this is compatible with inequality \eqref{inequality}.
+
+The easiest way to introduce this change in the derivation above is to keep the Lagrangian $\mathcal{L}$ as is, while making the replacement
+\begin{equation}\label{eta}
+\epsilon^k_j\to \epsilon^k_j+\eta^k_j,
+\end{equation}
+where the $\eta$'s are new variables. Recall that the $\epsilon$'s are the discrepancies between the outputs (for the current weights) and the target outputs. We can think of the $\eta$ variables as an attempt to reconstruct the noise in the targets, and we introduce (in $\mathcal{L}$) the penalty term
+\begin{equation}
+\frac{\kappa}{2} \sum_{{k\in K}\atop{j\in O}} (\eta^k_j)^2
+\end{equation}
+to keep the reconstructed noise small. Since the only other place that $\eta$'s appear in $\mathcal{L}$ --- by \eqref{eta} --- is in \eqref{L5}, stationarity of $\mathcal{L}$ with respect to the $\eta$ variables produces the equations
+\begin{equation}
+\kappa\, \eta^k_j+\gamma^k_j=0,
+\end{equation}
+with solutions
+\begin{equation}\label{etasol}
+\eta^k_j=-\frac{1}{\kappa}\gamma^k_j.
+\end{equation}
+We keep the definition \eqref{E(n)}, but the replacement \eqref{eta} and identity \eqref{etasol} have the effect that the matrix equation \eqref{init2} is replaced by
+\begin{equation}\label{softE(n)}
+\mathcal{E}(n)-\frac{1}{\kappa}\Gamma(n)=\widetilde{X}^T \delta W(n).
+\end{equation}
+Since the companion matrix equation \eqref{W+dW} is unchanged from its original form, we can solve for $\delta W(n)$ and substitute into \eqref{softE(n)} to arrive at
+\begin{equation}
+\left(\frac{1}{\kappa}+\widetilde{X}^T \widetilde{X}\right)\Gamma(n)=\widetilde{X}^T\Delta W+\mathcal{E}(n).
+\end{equation}
+The $|K|\times |K|$ matrix multiplying $\Gamma(n)$ is the sum of the matrix we had originally, for hard output constraints, and a multiple of the identity. Without the latter we were limited in inverting the matrix $\widetilde{X}^T\widetilde{X}$ by the condition that its rank was $|K|$, that is, the inequality $|H_+|\ge |K|$ on the dimension of the $|H_+|\times |K|$ matrix factor $\widetilde{X}$. However, thanks to the identity term proportional to $1/\kappa$, the matrix is invertible (generically) even when $|H_+|< |K|$, that is, for arbitrarily large data batches. The upshot is that the only effect of the soft output constraint is to modify the Lagrange multiplier initialization:
+\begin{equation}
+\Gamma(n)=\left(\frac{1}{\kappa}+\widetilde{X}^T \widetilde{X}\right)^{-1}\left(\widetilde{X}^T\Delta W+\mathcal{E}(n)\right).
+\end{equation}
+Taking the limit $\kappa\to\infty$ recovers the hard constraint initialization \eqref{gammainit}, except in the case when this limit is singular ($|H_+|< |K|$).
+
+\end{document}
