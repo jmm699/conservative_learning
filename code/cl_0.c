@@ -21,42 +21,42 @@ if(!fp)
 	printf("netfile not found\n");
 	return 0;
 	}
-	
+
 fscanf(fp,"%d%d%d",&datanodes,&hiddennodes,&classnodes);
 
 nodes=datanodes+hiddennodes+classnodes;
 
-indeg=malloc(nodes*sizeof(int));
-outdeg=malloc(nodes*sizeof(int));
-innode=malloc(nodes*sizeof(int*));
-inedge=malloc(nodes*sizeof(int*));
-outedge=malloc(nodes*sizeof(int*));
+indeg=malloc(nodes*sizeof(int));   //Number of incoming edges
+outdeg=malloc(nodes*sizeof(int));  //Number of outgoing edges
+innode=malloc(nodes*sizeof(int*)); //List of incoming nodes
+inedge=malloc(nodes*sizeof(int*)); //List of incoming edges
+outedge=malloc(nodes*sizeof(int*));//List of outgoing edges
 
 for(i=0;i<nodes-classnodes;++i)
 	outdeg[i]=0;
 
-maxindeg=0;	
+maxindeg=0;
 edges=0;
 for(i=datanodes;i<nodes;++i)
 	{
 	fscanf(fp,"%*d%d",&indeg[i]);
-	
+
 	if(indeg[i]>maxindeg)
 		maxindeg=indeg[i];
-	
+
 	innode[i]=malloc(indeg[i]*sizeof(int));
 	inedge[i]=malloc(indeg[i]*sizeof(int));
-	
+
 	for(d=0;d<indeg[i];++d)
 		{
 		inedge[i][d]=edges++;
-		
+
 		fscanf(fp,"%d",&innode[i][d]);
-		
+
 		++outdeg[innode[i][d]];
 		}
 	}
-	
+
 fclose(fp);
 
 for(i=0;i<nodes-classnodes;++i)
@@ -92,19 +92,19 @@ else
 	fprintf(stderr,"expected 1 argument: netfile\n");
 	return 1;
 	}
-	
+
 if(!getnet(netfile))
 	return 1;
-	
+
 for(i=datanodes;i<nodes;++i) {
 	printf("node %3d   has in-degree %3d\n",i,indeg[i]);
         for (int in=0; in<indeg[i]; in++) {
             printf("Incoming edge: %d -> %d == %d\n", in,i,inedge[i][in]);
                     }
                     }
-	
+
 printf("\n");
-	
+
 for(i=0;i<nodes-classnodes;++i) {
     printf("node %3d   has out-degree %3d\n",i,outdeg[i]);
     //Want to loop through innodes, if i is there, print
@@ -117,6 +117,6 @@ for(int d=0;d<indeg[out];++d)
 	}
 }
 }
-	
+
 return 0;
 }
