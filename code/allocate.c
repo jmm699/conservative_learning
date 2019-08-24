@@ -1,7 +1,7 @@
 #include "globals.h"
 // global declarations
 
-double **x,**y,**g,*w,*Dw;
+double **x,**y,**g,*w,*dw,*Dw;
 double **df, **dy;
 double **M; //X_tilde^T X_tilde
 double **e; //epsilon_j^k
@@ -25,6 +25,7 @@ e=malloc(batchsize*sizeof(double*));
 scratch=malloc(batchsize*sizeof(double*));
 
 w=malloc(edges*sizeof(double));
+dw=malloc(edges*sizeof(double));
 Dw=malloc(edges*sizeof(double));
 
 for(k=0;k<batchsize;++k)

@@ -83,25 +83,24 @@ if(!opendata(trainfile,testfile))
 setup();
 
 // train & test
+for (k=0; k<batchsize; k++) {
+  if(!readdata(k, trainptr, trainstart)) {
+    printf("problem reading data");
+    return 1;
+  }
+}
 
 // Initialize weights
 
 for(i=0; i<edges; i++) {
   w[i] = 2*(double) rand() / RAND_MAX - 1;
+  dw[i] = 0;
   Dw[i] = 0;
 }
-printf("Weights:\n");
-print_vec(w, edges);
 // Outer Loop
 do {
   // Run the network on the batch
   for(k=0; k<batchsize; k++) {
-    //if(!readdata(k, trainfile, trainstart)) {
-    if(!readdata(k, trainptr, trainstart)) {
-      printf("problem reading data");
-      return 1;
-    }
-
     for(j=datanodes; j<nodes; j++) {
       y[k][j] = 0;
       for(i=0; i<indeg[j]; i++) {
@@ -149,7 +148,13 @@ do {
   }
 
   printf("Top of outer loop:\n");
-  printf("M = X^T X:\n");
+  printf("x:\n");
+  print_mat(x, batchsize, nodes);
+  printf("y:\n");
+  print_mat(y, batchsize, nodes);
+  printf("Weights:\n");
+  print_vec(w, edges);
+  printf("M = (X^T X)^-1:\n");
   print_mat(M, batchsize, batchsize);
   printf("Enter to continue...");
   getchar();
@@ -160,7 +165,6 @@ do {
     for (k=0; k<batchsize; k++) {
       for (j=0; j<classnodes; j++) {
         jj=datanodes + hiddennodes + j;
-        printf("Class: %d\n", class[k]);
         if (j == class[k]) {
           e[k][j] = (y[k][jj] > delta) ? 0 : delta - y[k][jj];
         } else {
@@ -168,15 +172,11 @@ do {
         }
 
         for (i=0; i<indeg[datanodes + hiddennodes + j]; i++) {
-          e[k][j] += df[k][innode[datanodes + hiddennodes + j][i]] * w[inedge[datanodes+hiddennodes+j][i]] * dy[k][innode[datanodes + hiddennodes + j][i]];
+          e[k][j] -= df[k][jj] * w[inedge[jj][i]] * dy[k][innode[jj][i]];
         }
       }
     }
     printf("Top of inner loop:\n");
-    printf("x:\n");
-    print_mat(x, batchsize, nodes);
-    printf("y:\n");
-    print_mat(y, batchsize, nodes);
     printf("Epsilon:\n");
     print_mat(e, batchsize, classnodes);
     printf("Enter to continue...");
@@ -198,10 +198,6 @@ do {
           for(i=0; i<indeg[j]; i++) {
             g[k][j] += M[k][ell] * x[ell][innode[j][i]] * Dw[inedge[j][i]];
           }
-          //printf("g[%d][%d] += M[%d][%d] * e[%d][%d] = %lf * %lf\n",
-          //    k, j, k, ell, ell, jj, M[k][ell], e[ell][jj]);
-          //printf("Enter to continue...");
-          //getchar();
           g[k][j] += M[k][ell] * e[ell][jj];
         }
       }
@@ -250,20 +246,22 @@ do {
 
 
 
-    //WEIGHTS NEED TO GET UPDATED BY delta_W AFTER EACH INNER LOOP
     for (k=0; k<batchsize; k++) {
       for (j=0; j<classnodes; j++) {
-        scratch[k][j] -= g[k][j];
+        jj = classnodes + hiddennodes + j;
+        scratch[k][j] -= g[k][jj];
       }
     }
   } while (norm(scratch, batchsize, classnodes) > threshold);
 
-  // Delta_w[i][j] = x_tilde[i] * gamma[j]
+  // Update the weights
   for (j=datanodes; j<nodes; j++) {
     for (i=0; i<indeg[j]; i++) {
       for (k=0; k<batchsize; k++) {
-        Dw[innode[j][i]] += x[k][innode[j][i]] * g[k][j];
+        dw[innode[j][i]] += x[k][innode[j][i]] * g[k][j] - Dw[innode[j][i]];
       }
+      Dw[innode[j][i]] += dw[innode[j][i]];
+      w[innode[j][i]] += dw[innode[j][i]];
     }
   }
   // Re-run the network, update x_tilde, y_tilde, df

@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 // Variables
-extern double **x, **y, **g, *w, *Dw;
+extern double **x, **y, **g, *w, *dw, *Dw;
 extern double **df, **dy;
 extern double **M; //X_tilde^T X_tilde
 extern double **e; //epsilon_j^k
