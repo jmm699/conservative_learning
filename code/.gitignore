@@ -1,0 +1,7 @@
+.objects/
+.test/
+a.out
+cl
+gendata
+*.gch
+tags
