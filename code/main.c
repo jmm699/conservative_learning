@@ -58,9 +58,11 @@ int main(int argc,char* argv[])
 {
 // command line inputs here
 char *netfile, *trainfile, *testfile;
-int i,j,k,ell,ii,jj;
+int i,j,k,ell,jj;
 double delta = 1.0;
 double threshold = 0.001;
+double r = 0.1; // relaxation parameter
+double kappa = 10; // stiffness parameter
 
 if(argc==4)
   {
@@ -124,6 +126,8 @@ do {
         M[i][j] += x[i][k] * x[j][k];
       }
     }
+    // Add in stiffness parameter
+    M[i][i] += 1.0/kappa;
   }
   //Invert
   double *d;
@@ -212,19 +216,20 @@ do {
       }
     }
 
-      printf("Gamma:\n");
-      print_mat(g, batchsize, nodes);
-      printf("Enter to continue...");
-      getchar();
+    printf("Gamma:\n");
+    print_mat(g, batchsize, nodes);
+    printf("Enter to continue...");
+    getchar();
 
       // for j in H_-, k in K { delta_y_j^k = Sum_{i->j} x_tilde[i][k] (x_tilde[i] * gamma[j] - Delta_w[i][j]) }
     for(k=0; k<batchsize; k++) {
       for (j=datanodes; j<hm; j++) {
         for (i=0; i<indeg[j]; i++) {
           for (ell=0; ell<batchsize; ell++) {
-            dy[k][j] += x[k][innode[j][i]] * x[ell][innode[j][i]] * g[ell][j];
+            dy[k][j] += r * x[k][innode[j][i]] * x[ell][innode[j][i]] * g[ell][j];
           }
-          dy[k][j] -= x[k][innode[j][i]] * Dw[inedge[j][i]];
+          dy[k][j] -= r * x[k][innode[j][i]] * Dw[inedge[j][i]];
+          dy[k][j] += (1-r) * dy[k][j];
         }
       }
     }
@@ -234,9 +239,11 @@ do {
       for (j=hm; j<nodes; j++) {
         for (i=0; i<indeg[j]; i++) {
           for (ell=0; ell<batchsize; ell++) {
-            dy[k][j] += x[k][innode[j][i]] * x[ell][innode[j][i]] * g[ell][j];
+            dy[k][j] += r * x[k][innode[j][i]] * x[ell][innode[j][i]] * g[ell][j];
           }
-          dy[k][j] += df[k][innode[j][i]] * dy[k][innode[j][i]] * w[inedge[j][i]] - x[k][innode[j][i]] * Dw[inedge[j][i]];
+          dy[k][j] += r * df[k][innode[j][i]] * dy[k][innode[j][i]] * w[inedge[j][i]];
+          dy[k][j] -= r * x[k][innode[j][i]] * Dw[inedge[j][i]];
+          dy[k][j] += (1-r) * dy[k][j];
         }
       }
     }

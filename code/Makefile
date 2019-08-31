@@ -1,7 +1,7 @@
 output: .objects/allocate.o .objects/cholesky_inverse.o .objects/cl_0.o .objects/main.o .objects/readdata.o
 	gcc -Wall -g .objects/allocate.o .objects/cholesky_inverse.o .objects/cl_0.o .objects/main.o .objects/readdata.o -lm -o cl
 
-gendata:
+gendata: data_gen.c
 	gcc -Wall data_gen.c -o gendata
 
 .objects/allocate.o: allocate.c globals.h | .objects

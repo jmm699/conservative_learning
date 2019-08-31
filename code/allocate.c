@@ -7,7 +7,7 @@ double **M; //X_tilde^T X_tilde
 double **e; //epsilon_j^k
 double **scratch;
 int *class;
-int batchsize = 3;
+int batchsize = 30;
 
 // example of memory allocation
 

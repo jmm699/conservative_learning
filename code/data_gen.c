@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 int datanodes = 4;
-int lines = 20;
+int lines = 30;
 
 int main() {
   int i,j;
