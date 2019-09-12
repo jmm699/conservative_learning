@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include "globals.h"
 
 void print_vec(double *vector, int len) {
@@ -61,8 +62,9 @@ char *netfile, *trainfile, *testfile;
 int i,j,k,ell,jj;
 double delta = 1.0;
 double threshold = 0.001;
-double r = 0.1; // relaxation parameter
+double r = 1; // relaxation parameter
 double kappa = 10; // stiffness parameter
+srand(time(NULL));
 
 if(argc==4)
   {
@@ -93,9 +95,20 @@ for (k=0; k<batchsize; k++) {
 }
 
 // Initialize weights
+// Read in initial weights from file
+char weightfile[] = "weights";
+FILE *weight_file;
+weight_file=fopen(weightfile,"r");
+if (!weight_file) {
+  printf("Could not open weight file\n");
+  return 1;
+}
 
 for(i=0; i<edges; i++) {
-  w[i] = 2*(double) rand() / RAND_MAX - 1;
+//  w[i] = 2*(double) rand() / RAND_MAX - 1;
+  fscanf(weight_file,"%lf",&w[i]); //Exact correct weight
+  // Apply small perturbation to weights
+  w[i] += 0.01 * (double) rand() / RAND_MAX - 0.005;
   dw[i] = 0;
   Dw[i] = 0;
 }
@@ -106,7 +119,7 @@ do {
     for(j=datanodes; j<nodes; j++) {
       y[k][j] = 0;
       for(i=0; i<indeg[j]; i++) {
-        y[k][j] += x[k][i] * w[inedge[j][i]];
+        y[k][j] += x[k][innode[j][i]] * w[inedge[j][i]];
       }
         x[k][j] = f(y[k][j]);
         df[k][j] = fprime(y[k][j]);
@@ -158,8 +171,6 @@ do {
   print_mat(y, batchsize, nodes);
   printf("Weights:\n");
   print_vec(w, edges);
-  printf("M = (X^T X)^-1:\n");
-  print_mat(M, batchsize, batchsize);
   printf("Enter to continue...");
   getchar();
 
