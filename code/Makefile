@@ -4,6 +4,13 @@ output: .objects/allocate.o .objects/cholesky_inverse.o .objects/cl_0.o .objects
 gendata: data_gen.c
 	gcc -Wall data_gen.c -o gendata
 
+teacher: .objects/teacher.o .objects/cl_0.o
+	gcc -Wall .objects/teacher.o .objects/cl_0.o -o teacher
+
+.objects/teacher.o: teacher.c globals.h | .objects
+	gcc -Wall -g -c teacher.c globals.h
+	mv teacher.o .objects
+
 .objects/allocate.o: allocate.c globals.h | .objects
 	gcc -Wall -g -c allocate.c globals.h
 	mv allocate.o .objects
