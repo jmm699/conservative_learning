@@ -108,7 +108,7 @@ for(i=0; i<edges; i++) {
 //  w[i] = 2*(double) rand() / RAND_MAX - 1;
   fscanf(weight_file,"%lf",&w[i]); //Exact correct weight
   // Apply small perturbation to weights
-  w[i] += 0.01 * (double) rand() / RAND_MAX - 0.005;
+  w[i] += 0.1 * (double) rand() / RAND_MAX - 0.05;
   dw[i] = 0;
   Dw[i] = 0;
 }
