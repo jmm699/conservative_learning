@@ -1,3 +1,5 @@
+#ifndef GLOBAL_H
+#define GLOBAL_H
 #include <stdio.h>
 #include <stdlib.h>
 // Variables
@@ -20,3 +22,9 @@ extern int getnet(char *netfile);
 extern int opendata(char *trainfile, char *testfile);
 extern void closedata();
 extern int readdata(int k,FILE *dataptr,fpos_t datastart);
+extern void sgd_step();
+extern void cl_inner_loop(int max_iter);
+extern void print_vec(double *vector, int len);
+extern void print_mat(double **matrix, int rows, int columns);
+extern double norm(double **matrix, int rows, int columns);
+#endif

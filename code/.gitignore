@@ -1,4 +1,5 @@
 .objects/
+*.o
 .test/
 a.out
 cl

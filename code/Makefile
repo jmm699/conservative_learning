@@ -1,39 +1,23 @@
-output: .objects/allocate.o .objects/cholesky_inverse.o .objects/cl_0.o .objects/main.o .objects/readdata.o
-	gcc -Wall -g .objects/allocate.o .objects/cholesky_inverse.o .objects/cl_0.o .objects/main.o .objects/readdata.o -lm -o cl
+CXX = gcc
+CXXFLAGS = -Wall -Wextra
+MAIN_SRC = allocate.c cholesky_inverse.c cl_0.c readdata.c sgd.c cl_alg.c main.c util.c
+MAIN_OBJ = $(MAIN_SRC:%.c=%.o)
+
+output: $(MAIN_OBJ)
+	$(CXX) $(CXXFLAGS) $(MAIN_OBJ) -lm -o cl
 
 gendata: data_gen.c
 	gcc -Wall data_gen.c -o gendata
 
-teacher: .objects/teacher.o .objects/cl_0.o
+teacher: teacher.o cl_0.o
 	gcc -Wall .objects/teacher.o .objects/cl_0.o -o teacher
 
-.objects/teacher.o: teacher.c globals.h | .objects
-	gcc -Wall -g -c teacher.c globals.h
-	mv teacher.o .objects
+teacher.o: teacher.c globals.h
+	gcc -Wall -g -c teacher.c
 
-.objects/allocate.o: allocate.c globals.h | .objects
-	gcc -Wall -g -c allocate.c globals.h
-	mv allocate.o .objects
+%.o: %.c globals.h
+	$(CXX) $(CXXFLAGS) -c $<
 
-.objects/cholesky_inverse.o: cholesky_inverse.c | .objects
-	gcc -Wall -g -c cholesky_inverse.c
-	mv cholesky_inverse.o .objects
-
-.objects/cl_0.o: cl_0.c | .objects
-	gcc -Wall -g -c cl_0.c
-	mv cl_0.o .objects
-
-.objects/main.o: main.c globals.h | .objects
-	gcc -Wall -g -c main.c globals.h
-	mv main.o .objects
-
-.objects/readdata.o: readdata.c globals.h | .objects
-	gcc -Wall -g -c readdata.c globals.h
-	mv readdata.o .objects
-
-.objects:
-	mkdir .objects
-
+.PHONY: clean
 clean:
-	rm *.gch
-	rm -rf .objects
+	-rm *.o
