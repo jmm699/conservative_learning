@@ -20,7 +20,7 @@ void sgd_step() {
       if (j == class[k]) {
         e[k][j] = (y[k][jj] > delta) ? 0 : delta - y[k][jj];
       } else {
-        e[k][j] = (y[k][jj] < 0) ? 0 : y[k][jj];
+        e[k][j] = (y[k][jj] < 0) ? 0 : -y[k][jj];
       }
     }
   }

@@ -52,12 +52,6 @@ if(!opendata(trainfile,testfile))
 setup();
 
 // train & test
-for (k=0; k<batchsize; k++) {
-  if(!readdata(k, trainptr, trainstart)) {
-    printf("problem reading data");
-    return 1;
-  }
-}
 
 // Initialize weights
 // Read in initial weights from file
@@ -73,12 +67,20 @@ for(i=0; i<edges; i++) {
 //  w[i] = 2*(double) rand() / RAND_MAX - 1;
   fscanf(weight_file,"%lf",&w[i]); //Exact correct weight
   // Apply small perturbation to weights
-  w[i] += 0.1 * (double) rand() / RAND_MAX - 0.05;
+  w[i] += 2.5 * (double) rand() / RAND_MAX - 0.25;
   dw[i] = 0;
   Dw[i] = 0;
 }
 // Outer Loop
 do {
+  // Read in new batch
+  //batchsize = 1;
+  for (k=0; k<batchsize; k++) {
+    if(!readdata(k, trainptr, trainstart)) {
+      printf("problem reading data");
+      return 1;
+    }
+  }
   // Run the network on the batch
   for(k=0; k<batchsize; k++) {
     for(j=datanodes; j<nodes; j++) {
@@ -104,8 +106,8 @@ do {
   printf("Enter to continue...");
   getchar();
 
-  //cl_inner_loop(-1);
-  sgd_step();
+  cl_inner_loop(-1);
+  //sgd_step();
 
 } while (norm(e, batchsize, classnodes) > threshold);
 

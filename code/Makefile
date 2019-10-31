@@ -10,7 +10,7 @@ gendata: data_gen.c
 	gcc -Wall data_gen.c -o gendata
 
 teacher: teacher.o cl_0.o
-	gcc -Wall .objects/teacher.o .objects/cl_0.o -o teacher
+	gcc -Wall teacher.o cl_0.o -o teacher
 
 teacher.o: teacher.c globals.h
 	gcc -Wall -g -c teacher.c

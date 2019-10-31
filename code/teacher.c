@@ -29,7 +29,7 @@ double f( double x) {
 int main() {
   int i,j,k,class;
   char netfile[] = "net3_4_2";
-  int batchsize = 30;
+  int batchsize = 3000;
   srand(time(NULL));
   if (!getnet(netfile)) {
     return 1;
