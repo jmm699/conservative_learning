@@ -3,17 +3,56 @@
 #include <time.h>
 #include "globals.h"
 
-void cl_inner_loop(int max_iter) {
+void class_calculate_eps() {
+  // Calculates the epsilon matrix for the class-based
+  // conservative learning algorithm
+  int i,j,k,jj;
+  double delta = 1.0;
+  for (k=0; k<batchsize; k++) {
+    for (j=0; j<classnodes; j++) {
+      jj=datanodes + hiddennodes + j;
+      if (j == class[k]) {
+        e[k][j] = (y[k][jj] > delta) ? 0 : delta - y[k][jj];
+      } else {
+        e[k][j] = (y[k][jj] < 0) ? 0 : -y[k][jj];
+      }
+
+      for (i=0; i<indeg[datanodes + hiddennodes + j]; i++) {
+        e[k][j] -= df[k][jj] * w[inedge[jj][i]] * dy[k][innode[jj][i]];
+      }
+    }
+  }
+}
+
+
+void vec_calculate_eps() {
+  // Calculates the epsilon matrix for the vector-based
+  // conservative learning algorithm
+  int i,j,k,jj;
+  for (k=0; k<batchsize; k++) {
+    for (j=0; j<classnodes; j++) {
+      jj=datanodes + hiddennodes + j;
+      e[k][j] = teacher_vec[k][j] - y[k][jj];
+
+      for (i=0; i<indeg[datanodes + hiddennodes + j]; i++) {
+        e[k][j] -= df[k][jj] * w[inedge[jj][i]] * dy[k][innode[jj][i]];
+      }
+    }
+  }
+}
+
+
+void cl_inner_loop(int max_iter, void (*eps_func)(void)) {
   // Runs the conservative learning inner-loop
   // to update the weights w of the network in place
   // Will terminate after max_iter number of iterations
   // (set to a negative number to run indefinitely)
   // xtilde and ytilde should be initialized with
   // the current weights, along with df
+  // eps_func should be a subroutine that calculates eps[k][j]
   if (max_iter == 0)
     return;
   int i,j,k,ell,jj;
-  double delta = 1.0;
   double threshold = 0.001;
   double r = 1; // relaxation parameter
   double kappa = 10; // stiffness parameter
@@ -59,20 +98,7 @@ void cl_inner_loop(int max_iter) {
   // Inner Loop
   do {
     // calculate epsilon[k][j]
-    for (k=0; k<batchsize; k++) {
-      for (j=0; j<classnodes; j++) {
-        jj=datanodes + hiddennodes + j;
-        if (j == class[k]) {
-          e[k][j] = (y[k][jj] > delta) ? 0 : delta - y[k][jj];
-        } else {
-          e[k][j] = (y[k][jj] < 0) ? 0 : -y[k][jj];
-        }
-
-        for (i=0; i<indeg[datanodes + hiddennodes + j]; i++) {
-          e[k][j] -= df[k][jj] * w[inedge[jj][i]] * dy[k][innode[jj][i]];
-        }
-      }
-    }
+    eps_func();
     printf("Top of inner loop:\n");
     printf("Epsilon:\n");
     print_mat(e, batchsize, classnodes);
@@ -165,4 +191,14 @@ void cl_inner_loop(int max_iter) {
     }
   }
 
+}
+
+
+void cl_class_inner_loop(int max_iter) {
+  cl_inner_loop(max_iter, class_calculate_eps);
+}
+
+
+void cl_vec_inner_loop(int max_iter) {
+  cl_inner_loop(max_iter, vec_calculate_eps);
 }

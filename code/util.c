@@ -27,12 +27,22 @@ double norm(double** matrix, int rows, int columns) {
   double total = 0;
   int i;
   int j;
-  printf("Computing norm of:\n");
-  print_mat(matrix, rows, columns);
+  //printf("Computing norm of:\n");
+  //print_mat(matrix, rows, columns);
   for (i=0; i<rows; i++) {
     for (j=0; j<columns; j++) {
       total += matrix[i][j] * matrix[i][j];
     }
   }
   return total;
+}
+
+double vec_norm(double *vector, int len) {
+  // Compute norm squared of vector
+  int i;
+  double tot=0;
+  for (i=0; i<len; i++) {
+    tot += vector[i] * vector[i];
+  }
+  return tot;
 }

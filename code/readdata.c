@@ -83,3 +83,25 @@ fscanf(dataptr,"%d",&class[k]);
 
 return 1;
 }
+
+int vec_readdata(int k,FILE *dataptr,fpos_t datastart)
+{
+// Like readdata, but reads a vector value for the output instead of a class value
+int i;
+
+for(i=0;i<datanodes;++i)
+  if(fscanf(dataptr,"%lf",&x[k][i])==EOF)
+    {
+    fsetpos(dataptr,&datastart);
+    return 0;
+    }
+
+for(i=datanodes+hiddennodes;i<nodes;++i)
+  if(fscanf(dataptr,"%lf",&y[k][i])==EOF)
+    {
+    fsetpos(dataptr,&datastart);
+    return 0;
+    }
+
+return 1;
+}

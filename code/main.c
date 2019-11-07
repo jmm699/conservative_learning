@@ -26,7 +26,7 @@ int main(int argc,char* argv[])
 char *netfile, *trainfile, *testfile;
 int i,j,k,ell,jj;
 double delta = 1.0;
-double threshold = 0.001;
+double threshold = 1e-8;
 double r = 1; // relaxation parameter
 double kappa = 10; // stiffness parameter
 srand(time(NULL));
@@ -55,7 +55,7 @@ setup();
 
 // Initialize weights
 // Read in initial weights from file
-char weightfile[] = "weights";
+char weightfile[] = "vec_weights";
 FILE *weight_file;
 weight_file=fopen(weightfile,"r");
 if (!weight_file) {
@@ -65,16 +65,19 @@ if (!weight_file) {
 
 for(i=0; i<edges; i++) {
 //  w[i] = 2*(double) rand() / RAND_MAX - 1;
-  fscanf(weight_file,"%lf",&w[i]); //Exact correct weight
+  fscanf(weight_file,"%lf",&teacher_w[i]); //Exact correct weight
   // Apply small perturbation to weights
-  w[i] += 2.5 * (double) rand() / RAND_MAX - 0.25;
+  w[i] = teacher_w[i] + 2 * (double) rand() / RAND_MAX - 1;
   dw[i] = 0;
   Dw[i] = 0;
 }
 // Outer Loop
+printf("Iteration\tCost\tGradient norm\nWeight distance");
+int iter = 0;
+double cost, weight_dist, grad_dist;
 do {
   // Read in new batch
-  //batchsize = 1;
+  batchsize = 1; // required for sgd
   for (k=0; k<batchsize; k++) {
     if(!readdata(k, trainptr, trainstart)) {
       printf("problem reading data");
@@ -96,20 +99,27 @@ do {
       dy[k][j] = 0;
     }
   }
-  printf("Top of outer loop:\n");
-  printf("x:\n");
-  print_mat(x, batchsize, nodes);
-  printf("y:\n");
-  print_mat(y, batchsize, nodes);
-  printf("Weights:\n");
-  print_vec(w, edges);
-  printf("Enter to continue...");
-  getchar();
+  //printf("Top of outer loop:\n");
+  //printf("x:\n");
+  //print_mat(x, batchsize, nodes);
+  //printf("y:\n");
+  //print_mat(y, batchsize, nodes);
+  //printf("Weights:\n");
+  //print_vec(w, edges);
+  //printf("Enter to continue...");
+  //getchar();
 
-  cl_inner_loop(-1);
-  //sgd_step();
+  //cl_inner_loop(-1);
+  vec_sgd_step();
+  cost = norm(e, batchsize, classnodes);
+  grad_dist = vec_norm(dw, edges);
+  for (i=0; i<edges; i++)
+    Dw[i] = w[i] - teacher_w[i];
+  weight_dist = vec_norm(Dw, edges);
+  printf("%d\t%lf\t%lf\t%lf\n", iter, cost, grad_dist, weight_dist);
+  iter++;
 
-} while (norm(e, batchsize, classnodes) > threshold);
+} while ((cost > threshold) && (iter<1000));
 
 closedata();
 

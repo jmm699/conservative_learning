@@ -67,19 +67,21 @@ int main() {
     // Check if this is a good example to teach from
     // i.e. network produces negative output for the wrong output node,
     // output over 1 for correct node
-    if (!class) { //class = 0 case
-      if ((y[nodes-2] > 1) && (y[nodes-1]<0)) {
-        // Print inputs and class
-        printf("%lf %lf %lf %d\n", x[0], x[1], x[2], class);
-        k++;
-      }
-    } else { //class=1 case
-      if ((y[nodes-2] < 0) && (y[nodes-1] > 1)) {
-        // Print inputs and class
-        printf("%lf %lf %lf %d\n", x[0], x[1], x[2], class);
-        k++;
-      }
-    }
+    //if (!class) { //class = 0 case
+    //  if ((y[nodes-2] > 1) && (y[nodes-1]<0)) {
+    //    // Print inputs and class
+    //    printf("%lf %lf %lf %d\n", x[0], x[1], x[2], class);
+    //    k++;
+    //  }
+    //} else { //class=1 case
+    //  if ((y[nodes-2] < 0) && (y[nodes-1] > 1)) {
+    //    // Print inputs and class
+    //    printf("%lf %lf %lf %d\n", x[0], x[1], x[2], class);
+    //    k++;
+    //  }
+    //}
+    printf("%lf %lf %lf %lf %lf\n", x[0], x[1], x[2], y[nodes-2], y[nodes-1]);
+    k++;
   }
   printf("Weights: ");
   print_vec(w, edges);

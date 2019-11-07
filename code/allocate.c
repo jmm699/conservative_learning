@@ -6,6 +6,8 @@ double **df, **dy;
 double **M; //X_tilde^T X_tilde
 double **e; //epsilon_j^k
 double **scratch;
+double **teacher_vec;
+double *teacher_w;
 int *class;
 int batchsize = 30;
 
@@ -22,11 +24,13 @@ df=malloc(batchsize*sizeof(double*));
 g=malloc(batchsize*sizeof(double*));
 M=malloc(batchsize*sizeof(double*));
 e=malloc(batchsize*sizeof(double*));
+teacher_vec=malloc(batchsize*sizeof(double*));
 scratch=malloc(batchsize*sizeof(double*));
 
 w=malloc(edges*sizeof(double));
 dw=malloc(edges*sizeof(double));
 Dw=malloc(edges*sizeof(double));
+teacher_w=malloc(edges*sizeof(double));
 
 for(k=0;k<batchsize;++k)
   {
@@ -37,6 +41,7 @@ for(k=0;k<batchsize;++k)
   g[k]=malloc(nodes*sizeof(double));
   M[k]=malloc(batchsize*sizeof(double));
   e[k]=malloc(classnodes*sizeof(double));
+  teacher_vec[k]=malloc(classnodes*sizeof(double));
   scratch[k]=malloc(nodes*sizeof(double));
   }
 
