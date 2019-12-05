@@ -76,14 +76,6 @@ printf("Iteration\tCost\tGradient norm\tWeight distance\n");
 int iter = 0;
 double cost, weight_dist, grad_dist;
   batchsize = 1; // required for sgd
-  //for (i=0; i<6; i++) {
-  //for (k=0; k<batchsize; k++) {
-  //  if(!readdata(k, trainptr, trainstart)) {
-  //    printf("problem reading data");
-  //    return 1;
-  //  }
-  //}
-  //}
 do {
   // Read in new batch
   for (k=0; k<batchsize; k++) {

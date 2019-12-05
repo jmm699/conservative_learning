@@ -40,7 +40,7 @@ void sgd_step(void (*eps_func)(void)) {
   // xtilde and ytilde should already be initialized using
   // the current weights.  The weights are updated in place
 
-  double s = 1e-4; // learning rate
+  double s = 1e-2; // learning rate
 
   // Step 1: compute epsilon[k][j]
   eps_func();

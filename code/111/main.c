@@ -29,7 +29,7 @@ double delta = 1.0;
 double threshold = 1e-8;
 double r = 1; // relaxation parameter
 double kappa = 10; // stiffness parameter
-srand(1);
+srand(time(NULL));
 
 if(argc==4)
   {
@@ -76,22 +76,14 @@ printf("Iteration\tCost\tGradient norm\tWeight distance\n");
 int iter = 0;
 double cost, weight_dist, grad_dist;
   batchsize = 1; // required for sgd
-  //for (i=0; i<6; i++) {
-  //for (k=0; k<batchsize; k++) {
-  //  if(!readdata(k, trainptr, trainstart)) {
-  //    printf("problem reading data");
-  //    return 1;
-  //  }
-  //}
-  //}
-do {
-  // Read in new batch
   for (k=0; k<batchsize; k++) {
     if(!readdata(k, trainptr, trainstart)) {
       printf("problem reading data");
       return 1;
     }
   }
+do {
+  // Read in new batch
   // Run the network on the batch
   for(k=0; k<batchsize; k++) {
     for(j=datanodes; j<nodes; j++) {
@@ -127,7 +119,7 @@ do {
   printf("%d\t%lf\t%lf\t%lf\n", iter, cost, grad_dist, weight_dist);
   iter++;
 
-} while ((cost > threshold) && (iter<500));
+} while ((cost > threshold) && (iter<1000));
 
 closedata();
 
